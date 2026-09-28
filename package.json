@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "check": "node --check index.js && node --check src/*.js"
+    "check": "node --check index.js && node --check src/questions.js && node --check src/bot.js && node --check src/privacy.js && node --check src/scoring.js"
   },
   "keywords": [
     "telegram",

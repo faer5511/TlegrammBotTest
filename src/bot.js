@@ -1,7 +1,8 @@
 require('dotenv').config()
 const TelegramBot = require('node-telegram-bot-api')
 const { QUESTIONS } = require('./questions')
-const { sanitizeText, isAllowedChatId, getMinimalSession } = require('./privacy')
+const { sanitizeText, isAllowedChatId } = require('./privacy')
+const { scoreAnswers, formatScoreResult } = require('./scoring')
 
 const token = process.env.BOT_TOKEN
 const allowedChatIds = (process.env.ALLOWED_CHAT_IDS || '')
@@ -40,27 +41,20 @@ function currentQuestionText(question) {
   return `${question.text}\n\n${question.options.map((option, index) => `${index + 1}. ${option.label}`).join('\n')}`
 }
 
-function buildResultSummary(answers) {
-  const total = Object.keys(answers).length
+function showFinalResult(chatId, session) {
+  const scores = scoreAnswers(session.answers)
+  const resultText = formatScoreResult(scores)
 
-  if (!total) {
-    return 'Пока нет ответов. Попробуйте пройти анкетирование заново.'
-  }
-
-  const summary = Object.entries(answers)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(', ')
-
-  return `Спасибо. Вы ответили на ${total} вопросов.\n\nКлючевые ответы: ${summary}`
+  bot.sendMessage(chatId, resultText)
+  bot.sendMessage(chatId, 'Вы можете начать заново через команду /start или завершить анкетирование командой /reset.')
+  resetSession(chatId)
 }
 
 function sendQuestion(chatId, session) {
   const question = QUESTIONS[session.currentQuestionIndex]
 
   if (!question) {
-    const result = buildResultSummary(session.answers)
-    bot.sendMessage(chatId, result, { parse_mode: 'HTML' })
-    resetSession(chatId)
+    showFinalResult(chatId, session)
     return
   }
 
@@ -79,7 +73,7 @@ bot.onText(/\/start/i, msg => {
   const session = createSession(chatId)
   bot.sendMessage(
     chatId,
-    'Здравствуйте. Это короткая анонимная анкета для самоанализа. Ответы не требуют раскрывать личные данные.\n\nНажмите кнопку ниже, когда будете готовы.'
+    'Здравствуйте. Это анонимная анкета для самоанализа и оценки личностных тенденций.\n\nОтвечайте честно, выбирая номер варианта.\nВажно: это не диагноз, а ориентир для размышления.'
   )
   sendQuestion(chatId, session)
 })
@@ -91,9 +85,7 @@ bot.onText(/\/help/i, msg => {
 
 bot.onText(/\/reset/i, msg => {
   const chatId = msg.chat.id
-  const session = getSession(chatId)
-
-  if (session) {
+  if (getSession(chatId)) {
     resetSession(chatId)
   }
 
@@ -130,7 +122,7 @@ bot.on('message', msg => {
   if (!validOption) {
     bot.sendMessage(
       chatId,
-      `Пожалуйста, выберите номер ответа из списка для вопроса ${session.currentQuestionIndex + 1}.`
+      `Выберите вариант ответа от 1 до ${question.options.length} для вопроса ${session.currentQuestionIndex + 1}.`
     )
     return
   }
@@ -159,5 +151,4 @@ bot.on('polling_error', error => {
 module.exports = {
   bot,
   sessions,
-  getMinimalSession,
 }
