@@ -5,6 +5,23 @@ const DIMENSIONS = {
   assertiveness: { label: 'Уверенность в себе' },
   reflection: { label: 'Рефлексия' },
 }
+const { QUESTIONS } = require('./questions')
+
+const DIMENSION_ICONS = {
+  stability: '🌤️',
+  empathy: '💚',
+  control: '🎯',
+  assertiveness: '✨',
+  reflection: '🔎',
+}
+
+const SUGGESTIONS = {
+  stability: 'Заметьте, что помогает вам восстановиться после напряжённого дня, и выделите этому немного времени.',
+  empathy: 'Проверьте, хватает ли места собственным потребностям, когда вы поддерживаете других.',
+  control: 'Разделите ситуацию на то, что вы можете изменить, и то, что можно отпустить.',
+  assertiveness: 'Попробуйте обозначить одно своё желание или решение спокойно и прямо.',
+  reflection: 'Выберите один полезный вывод из прошлого опыта и превратите его в небольшой следующий шаг.',
+}
 
 function scoreAnswers(answers) {
   const totals = Object.fromEntries(Object.keys(DIMENSIONS).map(key => [key, 0]))
@@ -24,61 +41,74 @@ function scoreAnswers(answers) {
   return totals
 }
 
-function getProfileSummary(scores) {
+function getProfileSummary(scores, answers, questions = QUESTIONS) {
+  const answeredQuestions = questions.filter(question => {
+    if (!answers) return true
+    const answer = answers[question.id]
+    return answer && Object.keys(answer).length > 0
+  })
+  const maximums = Object.fromEntries(Object.keys(DIMENSIONS).map(key => [key, 0]))
+
+  // Сравниваем шкалы только по вопросам с содержательным ответом.
+  for (const question of answeredQuestions) {
+    for (const dimension of Object.keys(DIMENSIONS)) {
+      const maximum = Math.max(...question.options.map(option => Number(option.value[dimension]) || 0))
+      maximums[dimension] += maximum
+    }
+  }
+
   const scoreEntries = Object.entries(scores).map(([key, value]) => ({
     key,
     label: DIMENSIONS[key]?.label || key,
     value,
+    percentage: maximums[key] ? Math.min(100, Math.round((value / maximums[key]) * 100)) : 0,
+    icon: DIMENSION_ICONS[key] || '📊',
   }))
 
-  const strongest = [...scoreEntries].sort((a, b) => b.value - a.value)[0]
-  const lowest = [...scoreEntries].sort((a, b) => a.value - b.value)[0]
-
-  let profile = 'Сбалансированный'
-
-  if (strongest?.key === 'empathy') {
-    profile = 'Эмпатичный и социально ориентированный'
-  }
-
-  if (strongest?.key === 'assertiveness') {
-    profile = 'Уверенный и инициативный'
-  }
-
-  if (strongest?.key === 'control') {
-    profile = 'Организованный и самоконтрольный'
-  }
-
-  if (lowest?.key === 'stability') {
-    profile = 'Требует больше эмоциональной устойчивости'
-  }
+  const strongest = [...scoreEntries].sort((a, b) => b.percentage - a.percentage)[0]
+  const lowest = [...scoreEntries].sort((a, b) => a.percentage - b.percentage)[0]
 
   return {
     strongest,
     lowest,
-    profile,
     scoreEntries,
+    suggestion:
+      SUGGESTIONS[lowest?.key] || 'Отнеситесь к результатам с любопытством и выберите один небольшой шаг для себя.',
+    answeredCount: answeredQuestions.length,
   }
 }
 
-function formatScoreResult(scores) {
-  const summary = getProfileSummary(scores)
-  const lines = scoreEntriesToLines(summary.scoreEntries)
+function formatScoreResult(scores, answers, questions = QUESTIONS, testTitle = 'Точка опоры') {
+  const summary = getProfileSummary(scores, answers, questions)
+  const lines = summary.scoreEntries.map(({ icon, label, percentage }) => {
+    const filled = Math.round(percentage / 10)
+    return `${icon} ${label}\n${'🟩'.repeat(filled)}${'⬜'.repeat(10 - filled)} ${percentage}%`
+  })
 
   return [
-    'Результат анкеты:',
-    `Доминирующий тип: ${summary.profile}`,
-    `Наибольший показатель: ${summary.strongest?.label || '—'} (${summary.strongest?.value ?? 0})`,
-    `Самый низкий показатель: ${summary.lowest?.label || '—'} (${summary.lowest?.value ?? 0})`,
+    `🪞 РЕЗУЛЬТАТ · ${testTitle.toLocaleUpperCase('ru-RU')}`,
     '',
-    'Баллы по шкалам:',
+    `${summary.strongest?.icon || '✨'} Ваша опора: ${summary.strongest?.label || '—'}`,
+    `🌱 Тема для внимания: ${summary.lowest?.label || '—'}`,
+    '',
+    'ОЦЕНИТЬ СВОИПОЛОЖЕНИЯ',
+    '',
     ...lines,
     '',
-    'Важно: это не медицинская диагностика, а общая карта личностных тенденций для самоанализа.',
+    `💡 Идея для практики: ${summary.suggestion}`,
+    '',
+    `На основе ответов: ${summary.answeredCount} из ${questions.length}.`,
+    'Это не диагноз: шкалы отражают только выбранные ответы и не заменяют консультацию специалиста.',
   ].join('\n')
 }
 
-function scoreEntriesToLines(entries) {
-  return entries.map(({ label, value }) => `- ${label}: ${value}`)
+function formatShortConclusion(scores, answers, questions = QUESTIONS) {
+  const summary = getProfileSummary(scores, answers, questions)
+  if (!summary.answeredCount) {
+    return 'В последнем тесте не было содержательных ответов. Пройдите тест, чтобы увидеть краткий вывод.'
+  }
+
+  return `Возможная опора: ${summary.strongest.label}. Тема для внимания: ${summary.lowest.label}. ${summary.suggestion}`
 }
 
 module.exports = {
@@ -86,4 +116,5 @@ module.exports = {
   scoreAnswers,
   getProfileSummary,
   formatScoreResult,
+  formatShortConclusion,
 }

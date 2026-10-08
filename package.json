@@ -1,12 +1,12 @@
 {
   "name": "telegram-psychology-quiz-bot",
   "version": "1.0.0",
-  "description": "Anonymous Telegram questionnaire bot for self-reflection and interpersonal trait screening.",
+  "description": "Анонимный Telegram-бот с тестами для самоанализа и размышления о привычных реакциях.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "check": "node --check index.js && node --check src/questions.js && node --check src/bot.js && node --check src/privacy.js && node --check src/scoring.js"
+    "check": "node --check index.js && node --check src/questions.js && node --check src/testCatalog.js && node --check src/bot.js && node --check src/privacy.js && node --check src/scoring.js && node --check src/professionalStyleQuestions.js && node --check src/professionalStyleResultText.js"
   },
   "keywords": [
     "telegram",

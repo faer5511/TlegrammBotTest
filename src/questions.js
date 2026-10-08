@@ -1,68 +1,93 @@
+const QUESTION_MAP = {
+  yes: { score: 2 },
+  no: { score: 0 },
+  unsure: { score: 1 },
+  skip: { score: 0 },
+}
+
 const QUESTIONS = [
   {
     id: 'q1',
-    text: '1) В конфликтной ситуации вы в первую очередь:',
+    text: '1) Часто ли вы замечаете, что в конфликте начинаете контролировать ситуацию, даже если это вызывает напряжение?',
     options: [
-      {
-        label: 'Сохраняю спокойствие и пытаюсь разобраться в причинах',
-        value: { stability: 2, reflection: 2, control: 2 },
-      },
-      { label: 'Выражаю эмоции и говорю прямо, что чувствую', value: { assertiveness: 2, stability: 1 } },
-      { label: 'Ухожу от конфликта, чтобы не усугублять ситуацию', value: { empathy: 1, control: 1 } },
+      { label: 'Да', value: { control: QUESTION_MAP.yes.score, stability: 1 } },
+      { label: 'Нет', value: { control: QUESTION_MAP.no.score, empathy: 1 } },
+      { label: 'Сомневаюсь', value: { control: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
     ],
   },
   {
     id: 'q2',
-    text: '2) Что для вас важнее в отношениях с людьми?',
+    text: '2) Вы обычно чувствительны к настроению других людей и легко замечаете, когда им плохо?',
     options: [
-      { label: 'Понимание, поддержка и эмоциональная близость', value: { empathy: 2, stability: 2 } },
-      { label: 'Честность, ясность и уверенность', value: { assertiveness: 2, control: 1 } },
-      { label: 'Спокойствие, гармония и отсутствие давления', value: { stability: 2, empathy: 1 } },
+      { label: 'Да', value: { empathy: QUESTION_MAP.yes.score, stability: 1 } },
+      { label: 'Нет', value: { empathy: QUESTION_MAP.no.score, assertiveness: 1 } },
+      { label: 'Сомневаюсь', value: { empathy: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
     ],
   },
   {
     id: 'q3',
-    text: '3) Как вы обычно работаете над задачей?',
+    text: '3) Вам обычно проще принять решение, когда вы чувствуете внутреннюю уверенность, чем когда ждёте идеальных условий?',
     options: [
-      { label: 'Сначала планирую, потом действую по шагам', value: { control: 2, reflection: 2 } },
-      { label: 'Действую быстро, опираясь на импульс и интуицию', value: { assertiveness: 2, stability: 1 } },
-      { label: 'Сначала чувствую состояние и только потом выбираю подход', value: { empathy: 2, reflection: 2 } },
+      { label: 'Да', value: { assertiveness: QUESTION_MAP.yes.score, control: 1 } },
+      { label: 'Нет', value: { assertiveness: QUESTION_MAP.no.score, reflection: 1 } },
+      { label: 'Сомневаюсь', value: { assertiveness: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
     ],
   },
   {
     id: 'q4',
-    text: '4) Если вы ошиблись, что вы обычно делаете?',
+    text: '4) Часто ли вы долго анализируете свои ошибки и стараетесь извлечь из них урок?',
     options: [
-      { label: 'Анализирую причину и делаю выводы', value: { reflection: 2, control: 2 } },
-      { label: 'Стараюсь быстро исправить и двигаться дальше', value: { assertiveness: 2, stability: 1 } },
-      { label: 'Слишком переживаю и избегаю обсуждения', value: { stability: 1, empathy: 1 } },
+      { label: 'Да', value: { reflection: QUESTION_MAP.yes.score, control: 1 } },
+      { label: 'Нет', value: { reflection: QUESTION_MAP.no.score, stability: 1 } },
+      { label: 'Сомневаюсь', value: { reflection: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
     ],
   },
   {
     id: 'q5',
-    text: '5) Как вы обычно принимаете решения?',
+    text: '5) Вы обычно легче переживаете стресс, когда вокруг спокойная и гармоничная обстановка?',
     options: [
-      { label: 'На основании фактов и логики', value: { control: 2, reflection: 2 } },
-      { label: 'На основании интуиции и внутреннего ощущения', value: { empathy: 2, stability: 1 } },
-      { label: 'С учётом мнения близких и эмоциональной атмосферы', value: { empathy: 2, assertiveness: 1 } },
+      { label: 'Да', value: { stability: QUESTION_MAP.yes.score, empathy: 1 } },
+      { label: 'Нет', value: { stability: QUESTION_MAP.no.score, assertiveness: 1 } },
+      { label: 'Сомневаюсь', value: { stability: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
     ],
   },
   {
     id: 'q6',
-    text: '6) Что сильнее влияет на ваше настроение?',
+    text: '6) Вы часто ощущаете, что понимаете не только себя, но и состояние людей рядом?',
     options: [
-      { label: 'Ощущение контроля над происходящим', value: { control: 2, stability: 2 } },
-      { label: 'Эмоциональная атмосфера и отношения вокруг', value: { empathy: 2, stability: 2 } },
-      { label: 'Внутреннее чувство цели и уверенность в себе', value: { assertiveness: 2, reflection: 1 } },
+      { label: 'Да', value: { empathy: QUESTION_MAP.yes.score, stability: 1 } },
+      { label: 'Нет', value: { empathy: QUESTION_MAP.no.score, control: 1 } },
+      { label: 'Сомневаюсь', value: { empathy: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
+    ],
+  },
+  {
+    id: 'q7',
+    text: '7) Вам важно, чтобы решения были продуманными и логически обоснованными?',
+    options: [
+      { label: 'Да', value: { control: QUESTION_MAP.yes.score, reflection: 1 } },
+      { label: 'Нет', value: { control: QUESTION_MAP.no.score, assertiveness: 1 } },
+      { label: 'Сомневаюсь', value: { control: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
+    ],
+  },
+  {
+    id: 'q8',
+    text: '8) Вы часто замечаете, что внутреннее состояние влияет на принятие решений сильнее, чем логика?',
+    options: [
+      { label: 'Да', value: { stability: QUESTION_MAP.yes.score, empathy: 1 } },
+      { label: 'Нет', value: { stability: QUESTION_MAP.no.score, control: 1 } },
+      { label: 'Сомневаюсь', value: { stability: QUESTION_MAP.unsure.score } },
+      { label: 'Пропустить', value: {} },
     ],
   },
 ]
 
-function getQuestionById(id) {
-  return QUESTIONS.find(question => question.id === id)
-}
-
 module.exports = {
   QUESTIONS,
-  getQuestionById,
 }
